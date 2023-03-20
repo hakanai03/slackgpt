@@ -14,5 +14,6 @@ export const makeSlackBot = ({
     appToken,
     signingSecret,
     logLevel: LogLevel.DEBUG,
+    socketMode: true,
   });
 };
