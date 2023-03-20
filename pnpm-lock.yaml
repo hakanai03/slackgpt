@@ -2,6 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@slack/bolt': ^3.12.2
+  '@slack/web-api': ^6.8.1
   '@types/node': ^18.15.3
   axios: ^1.3.4
   nodemon: ^2.0.21
@@ -11,6 +12,7 @@ specifiers:
 
 dependencies:
   '@slack/bolt': 3.12.2
+  '@slack/web-api': 6.8.1
   '@types/node': 18.15.3
   axios: 1.3.4
   nodemon: 2.0.21
