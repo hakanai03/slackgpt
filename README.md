@@ -16,6 +16,12 @@ Note:
 1. Please issue a Socket Mode API key for the Slack bot. [ref](https://zenn.dev/dsl_gunma/articles/2ab0a125f416db)
 2. `SLACK_BOT_TOKEN` starts with `xoxb-` and `SLACK_APP_TOKEN` starts with `xapp-` .
 
+permissions required by a token:
+- app_mentions:read
+- channels:history
+- channels:read
+- channels:write
+
 and
 
 ```
