@@ -20,7 +20,7 @@ permissions required by a token:
 - app_mentions:read
 - channels:history
 - channels:read
-- channels:write
+- chat:write
 
 and
 
