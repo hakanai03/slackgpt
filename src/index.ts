@@ -1,8 +1,11 @@
 import { SlackEventMiddlewareArgs } from "@slack/bolt";
 import { WebClient } from "@slack/web-api";
-import { AccessoryElement } from "@slack/web-api/dist/response/ConversationsHistoryResponse";
-import { Block } from "@slack/web-api/dist/response/ConversationsOpenResponse";
-import { Accessory } from "@slack/web-api/dist/response/ConversationsRepliesResponse";
+import {
+  Accessory,
+  Message,
+  Block,
+  AccessoryElement,
+} from "@slack/web-api/dist/response/ConversationsRepliesResponse";
 import { getEnv } from "./lib/env";
 import { createCompletion, Messages } from "./lib/openai";
 import { makeSlackBot } from "./lib/slack";
@@ -71,67 +74,78 @@ const extractText = (elements: TextAccessoryElement[]) => {
   }, "");
 };
 
+const makeChatCompletionFromSlackMessage = (
+  slackMessage: Message,
+  bot_user_id: string
+) => {
+  const texts = filterRichTextBlocks(slackMessage.blocks).flatMap((block) => {
+    return filterElements(block.elements).flatMap((element) => {
+      switch (element.type) {
+        case "rich_text_quote":
+        case "rich_text_preformatted":
+          return filterElementTexts(element.elements, { code: true });
+        default:
+          return filterElementTexts(element.elements);
+      }
+    });
+  });
+  const message: ArrayElement<Messages> = {
+    content: extractText(texts),
+    role: slackMessage.user === bot_user_id ? "assistant" : "user",
+  };
+  return message;
+};
+
 const appMentionHandler = async ({
   event,
   say,
 }: SlackEventMiddlewareArgs<"app_mention">) => {
   const { ts, thread_ts, channel } = event;
 
-  if (thread_ts) {
-    // This is a threaded mention
-    try {
+  try {
+    const { user_id } = await webClient.auth.test();
+    if (!user_id) throw new Error();
+
+    if (thread_ts) {
+      // This is a threaded mention
       const result = await webClient.conversations.replies({
         channel: channel,
         ts: thread_ts,
       });
-      const { user_id } = await webClient.auth.test();
+      if (!result.messages) throw new Error();
 
       const messages = result.messages
-        ?.map((msg) => {
-          const texts = filterRichTextBlocks(msg.blocks).flatMap((block) => {
-            return filterElements(block.elements).flatMap((element) => {
-              switch (element.type) {
-                case "rich_text_quote":
-                case "rich_text_preformatted":
-                  return filterElementTexts(element.elements, { code: true });
-                default:
-                  return filterElementTexts(element.elements);
-              }
-            });
-          });
-          const message: ArrayElement<Messages> = {
-            content: extractText(texts),
-            role: msg.user === user_id ? "assistant" : "user",
-          };
-          return message;
-        })
+        .map((msg) => makeChatCompletionFromSlackMessage(msg, user_id))
         .filter((message) => message.content !== "");
-      if (!messages) return;
-      const completion = await createCompletion(messages);
 
+      const completion = await createCompletion(messages);
       await webClient.chat.postMessage({
         channel,
         thread_ts,
         text: completion.data.choices.slice(-1)[0].message?.content,
       });
-    } catch (error) {
-      console.error("Error fetching thread messages:", error);
-    }
-  } else {
-    // This is a non-threaded mention
-    console.log("Non-threaded mention:");
-    console.log(event.text);
-
-    try {
-      await webClient.chat.postMessage({
+    } else {
+      console.log("Non-threaded mention:");
+      const result = await webClient.conversations.replies({
         channel: channel,
-        text: event.text,
-        thread_ts: ts,
+        ts,
       });
-      console.log("Reply sent in a new thread.");
-    } catch (error) {
-      console.error("Error sending reply in a new thread:", error);
+      if (!result.messages) throw new Error();
+
+      const messages = result.messages
+        .map((msg) => makeChatCompletionFromSlackMessage(msg, user_id))
+        .filter((message) => message.content !== "");
+
+      const completion = await createCompletion(messages);
+      await webClient.chat.postMessage({
+        channel,
+        thread_ts: ts,
+        text: completion.data.choices.slice(-1)[0].message?.content,
+        reply_broadcast: true,
+      });
     }
+  } catch (error) {
+    console.error("Error sending reply in a new thread:", error);
   }
 };
 
