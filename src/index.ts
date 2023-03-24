@@ -13,8 +13,7 @@ import { makeSlackBot } from "./lib/slack";
 type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 
-const { slackAppToken, slackBotToken, slackSigningSecret, openaiApiKey } =
-  getEnv();
+const { slackAppToken, slackBotToken, slackSigningSecret } = getEnv();
 
 const bot = makeSlackBot({
   token: slackBotToken,
@@ -38,6 +37,10 @@ const filterElements = (accessories?: Accessory[]): Accessory[] => {
   );
 };
 
+const createCodeblock = (text: string) => {
+  return `\`\`\`${text}\`\`\``;
+};
+
 type TextAccessoryElement = AccessoryElement & {
   type: "text";
   text: string;
@@ -56,7 +59,7 @@ const filterElementTexts = (
   if (option?.code) {
     return textAccessoryElements.map((elm) => ({
       ...elm,
-      text: `\`\`\`${elm.text}\`\`\``,
+      text: createCodeblock(elm.text),
     }));
   }
   return textAccessoryElements;
@@ -103,7 +106,14 @@ const appMentionHandler = async ({
   const { ts, thread_ts, channel } = event;
 
   try {
-    const { user_id } = await webClient.auth.test();
+    // 👀をつける
+    await webClient.reactions.add({
+      channel,
+      name: "eyes",
+      timestamp: ts,
+    });
+
+    const { user_id, bot_id } = await webClient.auth.test();
     if (!user_id) throw new Error();
 
     if (thread_ts) {
@@ -115,8 +125,14 @@ const appMentionHandler = async ({
       if (!result.messages) throw new Error();
 
       const messages = result.messages
+        .filter(
+          (msg) =>
+            msg.bot_id === bot_id || // botの発言か
+            msg.text?.includes(`<@${user_id}>`) // ユーザーからbotへのメンションか
+        )
         .map((msg) => makeChatCompletionFromSlackMessage(msg, user_id))
         .filter((message) => message.content !== "");
+      console.dir(JSON.stringify(messages));
 
       const completion = await createCompletion(messages);
       await webClient.chat.postMessage({
