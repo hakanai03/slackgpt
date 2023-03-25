@@ -1,4 +1,7 @@
 import { App, LogLevel } from "@slack/bolt";
+import { WebClient } from "@slack/web-api";
+
+let webClient: WebClient;
 
 export const makeSlackBot = ({
   token,
@@ -17,3 +20,4 @@ export const makeSlackBot = ({
     socketMode: true,
   });
 };
+
