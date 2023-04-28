@@ -38,7 +38,10 @@ export const messageHandler = async ({
         .map((message) => formatStatementForOpenAIMessage(message));
       if (messages.length === 0) return; // 会話がない場合は何もしない
 
-      const completion = await createCompletion(messages);
+      const completion = await createCompletion({
+        messages,
+        model: "gpt-3.5-turbo",
+      });
       await slackApi.chat.postMessage({
         channel,
         thread_ts,
@@ -57,7 +60,10 @@ export const messageHandler = async ({
         .map((message) => formatStatementForOpenAIMessage(message));
       if (messages.length === 0) return; // 会話がない場合は何もしない
 
-      const completion = await createCompletion(messages);
+      const completion = await createCompletion({
+        messages,
+        model: "gpt-3.5-turbo",
+      });
       await slackApi.chat.postMessage({
         channel,
         thread_ts: ts,
