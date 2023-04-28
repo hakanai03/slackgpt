@@ -119,7 +119,7 @@ export const appMentionHandler = async ({
     if (completionRequest.messages.length === 0) return;
 
     const createCompletion =
-      findModel(completionRequest.messages[0].content) === "gpt-4"
+      findModel(completionRequest.model) === "gpt-4"
         ? createCompletionWithSecondKey
         : createCompletionFirstKey;
 

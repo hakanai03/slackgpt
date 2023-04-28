@@ -5,14 +5,18 @@ const configuration = new Configuration({
   apiKey: getEnv().openaiApiKey,
 });
 
-const configurationWithSecondKey = getEnv().openaiApiKeySecond
-  ? new Configuration({
-      apiKey: getEnv().openaiApiKeySecond,
-    })
-  : undefined;
+const secondKey = getEnv().openaiApiKeySecond;
+
+if (secondKey === undefined) {
+  console.log("[INFO] Second key is not set. Using first key instead.")
+}
+
+const configurationWithSecondKey = new Configuration({
+  apiKey: secondKey || getEnv().openaiApiKey,
+})
 
 const openai = new OpenAIApi(configuration);
-const openaiWithSecondKey = configurationWithSecondKey ? new OpenAIApi(configurationWithSecondKey) : openai;
+const openaiWithSecondKey = new OpenAIApi(configurationWithSecondKey);
 
 export type Messages = CreateChatCompletionRequest["messages"];
 
