@@ -73,7 +73,7 @@ export const appMentionHandler = async ({
     await slackApi.chat.postMessage({
       channel,
       thread_ts: ts,
-      text: "[🚨エラー] うまく会話ができなかったよ😭",
+      text: "[ERROR] うまく会話ができなかったよ😭",
       reply_broadcast: true,
     });
 
