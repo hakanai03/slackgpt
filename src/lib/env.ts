@@ -24,5 +24,6 @@ export const getEnv = () => {
     slackAppToken: SLACK_APP_TOKEN,
     slackSigningSecret: SLACK_SIGNING_SECRET,
     openaiApiKey: OPENAI_API_KEY,
+    openaiApiKeySecond: process.env.OPENAI_API_KEY_SECOND,
   };
 };

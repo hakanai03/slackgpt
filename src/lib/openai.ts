@@ -1,8 +1,14 @@
 import { Configuration, CreateChatCompletionRequest, OpenAIApi } from "openai";
+import {getEnv} from "./env";
 
 const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: getEnv().openaiApiKey,
 });
+
+const configurationWithSecondKey = getEnv().openaiApiKeySecond ? new Configuration({
+  apiKey: getEnv().openaiApiKeySecond,
+}) : undefined
+
 const openai = new OpenAIApi(configuration);
 
 export type Messages = CreateChatCompletionRequest["messages"]
