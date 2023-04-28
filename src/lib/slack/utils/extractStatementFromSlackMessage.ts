@@ -4,7 +4,7 @@ import {
   Block,
   AccessoryElement,
 } from "@slack/web-api/dist/response/ConversationsRepliesResponse";
-import {Statement} from "./Statement";
+import { Statement } from "./Statement";
 
 const createCodeblock = (text: string) => {
   return `\`\`\`${text}\`\`\``;
@@ -60,6 +60,14 @@ const extractText = (elements: TextAccessoryElement[]): string => {
   }, "");
 };
 
+/*
+ * Slackのメッセージから、Statementを抽出する
+ * Statement: ユーザーの発言またはbotの発言を抽出したもの
+ *
+ * @param slackMessage Slackのメッセージ
+ * @param bot_user_id botの発言を"assistant"扱いにするために使用
+ * @returns Statement
+ * */
 export const extractStatementFromSlackMessage = (
   slackMessage: Message,
   bot_user_id: string
@@ -82,4 +90,3 @@ export const extractStatementFromSlackMessage = (
   };
   return message;
 };
-

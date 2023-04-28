@@ -14,4 +14,5 @@ const bot = makeSlackBot({
 bot.event("app_mention", appMentionHandler);
 bot.event("message", messageHandler);
 
+
 bot.start();
