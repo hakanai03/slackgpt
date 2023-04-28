@@ -22,7 +22,7 @@ export const appMentionHandler = async ({
     if (!user_id) throw new Error();
 
     if (thread_ts) {
-      // This is a threaded mention
+      // スレッドの場合
       const result = await slackApi.conversations.replies({
         channel: channel,
         ts: thread_ts,
@@ -47,7 +47,7 @@ export const appMentionHandler = async ({
         text: completion.data.choices.slice(-1)[0].message?.content,
       });
     } else {
-      console.log("Non-threaded mention:");
+      // スレッドではない場合
       const result = await slackApi.conversations.replies({
         channel: channel,
         ts,
@@ -69,6 +69,13 @@ export const appMentionHandler = async ({
       });
     }
   } catch (error) {
-    console.error("Error sending reply in a new thread:", error);
+    // slackにエラーを投稿する
+    await slackApi.chat.postMessage({
+      channel,
+      thread_ts: ts,
+      text: "うまく会話ができなかったよ😭",
+      reply_broadcast: true,
+    });
+
   }
 };
